@@ -2,21 +2,19 @@ import aiohttp
 import asyncio
 import json
 import os
-import pandas as pd
 import time
 
-shared_link = "https://registry.npmjs.org/"
 directory = "npmDetails/" # where you want JSON files to be stored
 
-BATCH_SIZE = 5000
+BATCH_SIZE = 10000
 MAX_RETRIES = 3 # How many times a failed request will be retried
 RETRY_DELAY = 0.1  # 100 milliseconds
+
 # Load package names
 with open('names.json', 'r') as f:
     names = json.load(f)
 
-num_packages_to_retrieve = 10000 #len(names)
-
+num_packages_to_retrieve = len(names)
 total_requests = names[:num_packages_to_retrieve]
 total_batches = len(total_requests) // BATCH_SIZE + (len(total_requests) % BATCH_SIZE > 0)
 failed_packages = []
@@ -29,11 +27,11 @@ def clean_package_name(package_name):
         "*": "&!=%",
     }
     
-    # Replaces each character in the package name according to the cipher.
     updated_package_name = ''.join(cipher.get(char, char) for char in package_name)
     return updated_package_name
 
 async def retrieve_package_details(session, package_name):
+    shared_link = "https://registry.npmjs.org/"
     url = f"{shared_link}{package_name}"
     custom_file_path = os.path.join(directory, clean_package_name(package_name) + ".json")
     for attempt in range(MAX_RETRIES):
